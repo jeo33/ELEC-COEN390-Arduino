@@ -19,3 +19,4 @@ void loop() {
  
   delay(1000);
 }
+https://www.hackster.io/pulasthi-Narada/connecting-esp8266-to-firebase-to-send-receive-data-4adf66
