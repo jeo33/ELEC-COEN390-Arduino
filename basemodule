@@ -1,0 +1,143 @@
+//
+// Copyright 2015 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+// FirebaseDemo_ESP8266 is a sample that demo the different functions
+// of the FirebaseArduino API.
+
+#include <ESP8266WiFi.h>
+#include <FirebaseArduino.h>
+#include <SoftwareSerial.h>
+String sensorValue;
+#define FIREBASE_HOST "test-f13b1-default-rtdb.firebaseio.com"
+#define FIREBASE_AUTH "yF8p3LnqpyHxBxQPS67UEV71NfYplrjcPBEDvdSp"
+#define WIFI_SSID "CellNew"
+#define WIFI_PASSWORD "wubinator"
+#define BAUD_RATE_SERIAL1 9600
+#define BAUD_RATE_SERIAL2 115200
+#define BAUD_RATE_SERIAL3 57600
+#define D1 5
+#define D2 4
+#define D3 0
+#define D4 2
+#define D5 14
+#define D6 12
+#define D7 13
+String line;
+
+SoftwareSerial serial1(D1, D2);  // RX: D1, TX: D2
+//SoftwareSerial serial2(D3, D4);  // RX: D3, TX: D4
+//SoftwareSerial serial3(D5, D6);  // RX: D5, TX: D6
+
+void setup() {
+  pinMode(D3,OUTPUT);
+  pinMode(D4,OUTPUT);
+  Serial.begin(9600);
+  serial1.begin(BAUD_RATE_SERIAL1);
+  //serial2.begin(BAUD_RATE_SERIAL2);
+  //serial3.begin(BAUD_RATE_SERIAL3);
+  // connect to wifi.
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("connecting");
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println();
+  Serial.print("connected: ");
+  Serial.println(WiFi.localIP());
+  
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+}
+String message_name ="message/";
+int n = 0;
+int num ;
+bool skip=false;
+
+
+void loop() {
+
+digitalWrite(D3,LOW);
+digitalWrite(D4,LOW);
+delay(10);
+serial1.print('s');
+delay(150);
+  if (serial1.available()) {
+    line=serial1.readStringUntil('\n');
+    Serial.print("Received from Serial1: ");
+    Serial.println(line);
+  }else{line ="CL";}
+
+  serial1.print('b');
+delay(150);
+  if (serial1.available()) {
+    line=line +"/"+ serial1.readStringUntil('\n');
+    Serial.print("Received from Serial1: ");
+    Serial.println(line);
+  }else{line =line +"/"+"CL";}
+
+digitalWrite(D3,LOW);
+digitalWrite(D4,HIGH);
+delay(10);
+serial1.print('s');
+delay(150);
+  if (serial1.available()) {
+    line=line +"/"+ serial1.readStringUntil('\n');
+    Serial.print("Received from Serial1: ");
+    Serial.println(line);
+  }else{line =line +"/"+"CL";}
+
+  serial1.print('b');
+delay(150);
+  if (serial1.available()) {
+    line=line +"/"+ serial1.readStringUntil('\n');
+    Serial.print("Received from Serial1: ");
+    Serial.println(line);
+  }else{line =line +"/"+"CL";}
+
+digitalWrite(D3,HIGH);
+digitalWrite(D4,LOW);
+delay(10);
+serial1.print('s');
+delay(200);
+  if (serial1.available()) {
+    line=line +"/"+ serial1.readStringUntil('\n');
+    Serial.print("Received from Serial1: ");
+    Serial.println(line);
+  }else{line =line +"/"+"CL";}
+
+  serial1.print('b');
+delay(200);
+  if (serial1.available()) {
+    line=line +"/"+ serial1.readStringUntil('\n');
+    Serial.print("Received from Serial1: ");
+    Serial.println(line);
+  }else{line =line +"/"+"CL";}
+  
+
+  
+delay(100);
+if(skip){  
+   Firebase.setString(message_name+"current_reading", line+"/"+String(n));
+   Firebase.setString(message_name+String(n), line);
+  n++;  // handle error
+  if (Firebase.failed()) {
+      Serial.print("setting /message failed:");
+      Serial.println(Firebase.error());  
+      return;
+  }
+}
+ skip=true;
+}
